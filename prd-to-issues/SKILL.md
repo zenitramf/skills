@@ -1,19 +1,19 @@
 ---
 name: prd-to-issues
-description: Break a PRD into independently-grabbable GitHub issues using tracer-bullet vertical slices. Use when user wants to convert a PRD to issues, create implementation tickets, or break down a PRD into work items.
+description: Break a PRD into independently-grabbable ClickUp subtask using tracer-bullet vertical slices. Use when user wants to convert a PRD to subtasks, create implementation tickets, or break down a PRD into work items.
 ---
 
 # PRD to Issues
 
-Break a PRD into independently-grabbable GitHub issues using vertical slices (tracer bullets).
+Break a PRD into independently-grabbable ClickUp issues using vertical slices (tracer bullets).
 
 ## Process
 
 ### 1. Locate the PRD
 
-Ask the user for the PRD GitHub issue number (or URL).
+Ask the user for the PRD ClickUp issue number (or URL).
 
-If the PRD is not already in your context window, fetch it with `gh issue view <number>` (with comments).
+If the PRD is not already in your context window, fetch it with `ClickUp MCP` (with comments).
 
 ### 2. Explore the codebase (optional)
 
@@ -49,16 +49,16 @@ Ask the user:
 
 Iterate until the user approves the breakdown.
 
-### 5. Create the GitHub issues
+### 5. Create the ClickUp subtasks
 
-For each approved slice, create a GitHub issue using `gh issue create`. Use the issue body template below.
+For each approved slice, create a ClickUp sub-task issue using `ClickUp MCP`. Use the issue body template below.
 
 Create issues in dependency order (blockers first) so you can reference real issue numbers in the "Blocked by" field.
 
 <issue-template>
 ## Parent PRD
 
-#<prd-issue-number>
+# <prd-issue-number>
 
 ## What to build
 
@@ -66,9 +66,13 @@ A concise description of this vertical slice. Describe the end-to-end behavior, 
 
 ## Acceptance criteria
 
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
+Use clear Gherkin Acceptance Criteria. Output format will be
+
+Ensure all Gherkin acceptance criteria are fully Cucumber-compliant and compatible with .feature files
+
+``` gherkin
+ ...
+```
 
 ## Blocked by
 
@@ -85,4 +89,4 @@ Reference by number from the parent PRD:
 
 </issue-template>
 
-Do NOT close or modify the parent PRD issue.
+Do NOT close or modify the parent PRD task.
