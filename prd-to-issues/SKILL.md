@@ -1,64 +1,108 @@
 ---
 name: prd-to-issues
-description: Break a PRD into independently-grabbable ClickUp subtask using tracer-bullet vertical slices. Use when user wants to convert a PRD to subtasks, create implementation tickets, or break down a PRD into work items.
+description: break a product requirements document into independently grabbable clickup subtasks using tracer-bullet vertical slices. use when the user wants to convert a prd into implementation tickets, create clickup subtasks from a prd, break down a prd into work items, or plan vertical-slice delivery with hitl versus afk classification and dependency ordering.
 ---
 
 # PRD to Issues
 
-Break a PRD into independently-grabbable ClickUp issues using vertical slices (tracer bullets).
+Convert an implementation PRD into independently grabbable ClickUp subtasks using thin vertical slices.
 
-## Process
+## Workflow
 
-### 1. Locate the PRD
+Follow this sequence:
 
-Ask the user for the PRD ClickUp issue number (or URL).
+1. Locate and read the parent PRD
+2. Explore the codebase or surrounding context when that would improve the breakdown
+3. Draft thin vertical slices
+4. Review the proposed slices with the user and iterate
+5. Create the ClickUp subtasks in dependency order
 
-If the PRD is not already in your context window, fetch it with `ClickUp MCP` (with comments).
+## 1. Locate the parent PRD
 
-### 2. Explore the codebase (optional)
+Ask the user for the PRD ClickUp task number or URL.
 
-If you have not already explored the codebase, do so to understand the current state of the code.
+If the PRD content is not already available in the conversation, fetch it using the user's ClickUp tooling, including comments when available.
 
-### 3. Draft vertical slices
+Always ground the breakdown in the actual PRD content. Do not infer missing requirements if the PRD is incomplete. Instead, call out ambiguity and keep the affected slices as HITL if needed.
 
-Break the PRD into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
+## 2. Explore implementation context when useful
 
-Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an architectural decision or a design review. AFK slices can be implemented and merged without human interaction. Prefer AFK over HITL where possible.
+If the existing codebase, architecture, or surrounding systems matter for the breakdown, inspect them before finalizing slices.
 
-<vertical-slice-rules>
-- Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)
-- A completed slice is demoable or verifiable on its own
-- Prefer many thin slices over few thick ones
-</vertical-slice-rules>
+Use this context to:
 
-### 4. Quiz the user
+- avoid slices that conflict with current architecture
+- identify natural seams for deep, testable modules
+- recognize hidden dependencies that the PRD did not spell out
+- keep each slice end-to-end rather than layer-local
 
-Present the proposed breakdown as a numbered list. For each slice, show:
+Skip deep exploration when the PRD is self-contained and the user only wants a first-pass task breakdown.
 
-- **Title**: short descriptive name
-- **Type**: HITL / AFK
-- **Blocked by**: which other slices (if any) must complete first
-- **User stories covered**: which user stories from the PRD this addresses
+## 3. Draft tracer-bullet vertical slices
 
-Ask the user:
+Break the PRD into thin vertical slices.
 
-- Does the granularity feel right? (too coarse / too fine)
-- Are the dependency relationships correct?
-- Should any slices be merged or split further?
-- Are the correct slices marked as HITL and AFK?
+Each slice must be a narrow but complete path through the relevant layers. Prefer slices that are independently demoable, testable, or otherwise verifiable.
+
+### Vertical slice rules
+
+- each slice must cut through the full behavior, not just one technical layer
+- each completed slice must be demoable or verifiable on its own
+- prefer many thin slices over a few broad slices
+- avoid separate "backend only", "frontend only", or "schema only" subtasks unless the work is truly a standalone slice
+- when uncertain, split further until a single engineer could comfortably grab the work without owning a huge ambiguous ticket
+
+### HITL vs AFK
+
+Label every slice as one of:
+
+- **HITL**: requires human interaction, decision, approval, review, or other synchronous input
+- **AFK**: can be implemented, tested, and merged without additional human interaction
+
+Prefer AFK over HITL whenever the work can be framed that way honestly.
+
+### Dependency rules
+
+Track blockers between slices. Keep the graph as simple as possible.
+
+- only add a blocker when a slice truly cannot proceed first
+- prefer parallelizable slices when feasible
+- create foundational blockers first so downstream subtasks can reference real ClickUp task numbers later
+
+## 4. Present the proposed breakdown for review
+
+Present the draft as a numbered list.
+
+For each slice, include exactly these fields:
+
+- **Title**
+- **Type**: HITL or AFK
+- **Blocked by**
+- **User stories covered**
+
+Then explicitly ask the user to review:
+
+- whether the granularity is right
+- whether dependencies are correct
+- whether any slices should be split or merged
+- whether the HITL and AFK labels are correct
 
 Iterate until the user approves the breakdown.
 
-### 5. Create the ClickUp subtasks
+Do not create ClickUp subtasks before the user approves, unless the user clearly instructs you to skip review and proceed directly.
 
-For each approved slice, create a ClickUp sub-task issue using `ClickUp MCP`. Use the issue body template below.
+## 5. Create ClickUp subtasks
 
-Create issues in dependency order (blockers first) so you can reference real issue numbers in the "Blocked by" field.
+After approval, create the subtasks in dependency order so blocker references can use real task numbers.
 
-<issue-template>
+Do not close, overwrite, or otherwise modify the parent PRD task.
+
+Use this template for every subtask:
+
+```markdown
 ## Parent PRD
 
-# <prd-issue-number>
+#<prd-issue-number>
 
 ## What to build
 
@@ -66,19 +110,22 @@ A concise description of this vertical slice. Describe the end-to-end behavior, 
 
 ## Acceptance criteria
 
-Use clear Gherkin Acceptance Criteria. Output format will be
+Use clear Gherkin Acceptance Criteria.
+Ensure all Gherkin acceptance criteria are fully Cucumber-compliant and compatible with .feature files.
 
-Ensure all Gherkin acceptance criteria are fully Cucumber-compliant and compatible with .feature files
-
-``` gherkin
- ...
+```gherkin
+Feature: [feature name]
+  Scenario: [scenario name]
+    Given ...
+    When ...
+    Then ...
 ```
 
 ## Blocked by
 
-- Blocked by #<issue-number> (if any)
+- Blocked by #<issue-number>
 
-Or "None - can start immediately" if no blockers.
+Or `None - can start immediately` if there are no blockers.
 
 ## User stories addressed
 
@@ -87,6 +134,28 @@ Reference by number from the parent PRD:
 - User story 3
 - User story 7
 
-</issue-template>
+```
 
-Do NOT close or modify the parent PRD task.
+## Quality bar for subtasks
+
+Each created subtask should:
+- describe observable end-to-end behavior
+- be independently grabbable by an engineer
+- have clear acceptance criteria
+- reference the parent PRD instead of copying it
+- identify real blockers only when necessary
+- map back to explicit user stories from the PRD
+
+## Handling ambiguity
+
+If the PRD is missing needed detail:
+- surface the ambiguity clearly
+- propose the smallest reasonable slice set
+- mark decision-heavy work as HITL
+- ask for approval before creating subtasks
+
+## Output style
+
+Keep the review breakdown concise but concrete.
+
+When creating tasks, keep the task bodies structured and consistent. Use exact user story references from the parent PRD whenever possible.
