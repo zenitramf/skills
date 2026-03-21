@@ -1,9 +1,11 @@
 ---
 name: obsidian-daily-note-formatter
-description: format rough obsidian daily notes into clean markdown and, when possible, fetch the daily note with obsidian cli for today or a user-specified date before rewriting it in place. use when the user has rapid journal notes, fragmented bullets, sections separated by divider lines, task or todo markers, or shorthand topic and person headings that need to be converted into structured obsidian notes with h1 headings, subheadings, wikilinks, and tasks-plugin compliant checkboxes due the next day.
+description: selectively format rough obsidian daily note sections into clean markdown and, when possible, fetch the daily note with obsidian cli for today or a user-specified date before rewriting only the parts that need cleanup. use when the user has rapid journal notes, fragmented bullets, sections separated by divider lines, task or todo markers, or shorthand topic and person headings that need to be converted into structured obsidian notes with h1 headings, subheadings, verified wikilinks to existing notes only, and tasks-plugin compliant checkboxes due the next day while preserving sections that are already well formatted.
 ---
 
 Format rough daily notes into polished Obsidian markdown.
+
+Only transform the parts of a daily note that still need formatting. Leave already well-structured sections alone.
 
 ## Workflow
 
@@ -13,23 +15,31 @@ Format rough daily notes into polished Obsidian markdown.
    - If Obsidian CLI access is available in the environment, get the note contents from the daily note before transforming.
    - If the note text is already provided directly in chat, use that text.
 
-2. Parse logical boundaries.
+2. Identify what actually needs formatting.
+   - Inspect the note section by section.
+   - Treat already formatted sections as locked content and preserve them unless they clearly violate the original rules.
+   - A section usually requires formatting when it contains rough shorthand, inconsistent bullets, raw delimiters such as `---` or `<hr>`, heading markers like `task>` or `idea>`, or obviously unpolished phrasing.
+   - A section usually does not require formatting when it already has clean markdown structure, sensible headings, and readable bullets aligned with the skill rules.
+
+3. Parse logical boundaries for the unformatted portions.
    - Treat `---` and `<hr>` as hard boundaries between separate note ideas.
    - Treat lines ending in `>` as a strong signal that a heading is being introduced.
    - Treat `/` as a sub-context delimiter when it obviously separates a person or discussion context.
    - If the input is inconsistent or free-form, make the best sensible structural guess.
 
-3. Rewrite the note.
-   - Replace the original content with the cleaned markdown.
+4. Rewrite only the sections that need it.
+   - Replace rough sections with cleaned markdown.
+   - Preserve existing formatted sections in place when they already comply with the rules.
    - Do not preserve the raw input unless the user explicitly asks.
    - Do not add a document title above the note.
    - Use only content headings that belong to the note itself.
 
-4. If the note came from Obsidian CLI, write the transformed content back so the original note is replaced.
+5. If the note came from Obsidian CLI, write the transformed content back so the updated note replaces the original.
 
 ## Output rules
 
 ### Heading rules
+
 - Every top-level note section must start with `# `.
 - Main headings must use this exact pattern whenever a topic can be inferred:
   - `# Topic | Person | Heading`
@@ -46,6 +56,7 @@ Format rough daily notes into polished Obsidian markdown.
 - Use `##` and deeper headings only for true substructure inside a top-level section.
 
 ### Person field rules
+
 - Use the person field when a specific person is central and obvious from the input.
 - Normalize obvious person names into title case.
 - When a heading is about a person-specific discussion, prefer a descriptive heading such as:
@@ -54,6 +65,7 @@ Format rough daily notes into polished Obsidian markdown.
 - If no person is central, omit the person slot and use `# Topic | Heading`.
 
 ### Topic classification rules
+
 - `Idea`: concepts, brainstorms, things to explore, plans, or inspirations.
 - `Conversation`: discussions, things talked about with someone, or discussion notes.
 - `Task`: action items that should become tasks.
@@ -63,6 +75,7 @@ Format rough daily notes into polished Obsidian markdown.
 - `Reminder`: things to remember that should not become tasks; add `#remind-me` in the section body.
 
 ## Task conversion rules
+
 - If the source marker is `task>` or `todo>`, convert the actionable items into Obsidian Tasks plugin checkboxes.
 - Use this format:
   - `- [ ] Task text 📅 YYYY-MM-DD`
@@ -74,11 +87,13 @@ Format rough daily notes into polished Obsidian markdown.
 - Do not tag task sections with `#remind-me`.
 
 ## Reminder rules
+
 - For reminder content that is explicitly not a task, classify it under `Reminder`.
 - Include `#remind-me` in the body of that section.
 - Do not convert reminders into checkboxes unless the input clearly says `task>` or `todo>` or is unmistakably an action item.
 
 ## Delimiter and structure rules
+
 - `topic text>` usually signals the start of a new section.
 - `topic / person` or `topic>person/` usually implies a sub-context.
 - Example:
@@ -89,9 +104,13 @@ Format rough daily notes into polished Obsidian markdown.
 - If a person-specific sub-context is better represented as a full top-level section, prefer clarity over rigid parsing.
 
 ## WikiLink rules
-- Add Obsidian WikiLinks only when the related word is obvious and likely to represent a reusable note target.
+
+- Add Obsidian WikiLinks only when the related word is obvious, likely to represent a reusable note target, and an existing note can be confirmed.
+- Never create a WikiLink for a note that does not already exist.
+- When Obsidian CLI is available, verify existence before linking by resolving the note with the CLI.
+- If note existence cannot be verified confidently, leave the text unlinked.
 - Good candidates:
-  - People names such as `[[Hunny]]`, `[[Luis]]`, `[[Ryan]]`
+  - People names such as `[[Hunny]]`, `[[Luis]]`, `[[Ryan]]` when those notes already exist
   - Named projects, recurring places, repeated internal concepts
   - Clearly referenced books, notes, or entities that are likely to deserve their own page
 - Avoid over-linking common words.
@@ -99,6 +118,7 @@ Format rough daily notes into polished Obsidian markdown.
 - Use natural judgment and keep links sparse and helpful.
 
 ## Style rules
+
 - Clean up spelling, capitalization, and punctuation.
 - Preserve the user's meaning.
 - Keep bullets concise.
@@ -107,15 +127,19 @@ Format rough daily notes into polished Obsidian markdown.
 - Food logs, quick logs, and factual observations usually belong under `Note`.
 
 ## Default formatting behavior
+
 - Prefer one top-level section per logical idea chunk.
 - Under a top-level section, use bullets for supporting details.
 - Convert shorthand into readable phrasing.
 - Make best-guess organizational choices when delimiters are missing or messy.
+- When a note is partially formatted already, preserve the clean sections and only rewrite the rough ones.
 
 ## Examples
 
 ### Example 1
+
 Input:
+
 ```text
 convo talk with hunny>
 - point 1
@@ -123,15 +147,21 @@ convo talk with hunny>
 ```
 
 Output:
+
 ```markdown
 # Conversation | Hunny | Discussion with Hunny
+
 - [[Hunny]]
 - Point 1
 - Point 2
 ```
 
+Only use the `[[Hunny]]` link if the `Hunny` note already exists.
+
 ### Example 2
+
 Input:
+
 ```text
 idea get info on website>discuss with Ryan/
 - point 1
@@ -139,16 +169,23 @@ idea get info on website>discuss with Ryan/
 ```
 
 Output:
+
 ```markdown
 # Idea | Website Info
+
 ## Ryan | Discussion with Ryan
+
 - [[Ryan]]
 - Point 1
 - Point 2
 ```
 
+Only use the `[[Ryan]]` link if the `Ryan` note already exists.
+
 ### Example 3
+
 Input:
+
 ```text
 task ticktick>
 - reach out to luis, to see how hes doing.
@@ -157,29 +194,70 @@ task ticktick>
 Assume note date is 2026-03-21.
 
 Output:
+
 ```markdown
 # Task | Luis | Check in with Luis
+
 - [ ] Reach out to [[Luis]] to see how he's doing. 📅 2026-03-22
 ```
 
+Only use the `[[Luis]]` link if the `Luis` note already exists.
+
 ### Example 4
+
 Input:
+
 ```text
 reminder call bank about card maybe later
 ```
 
 Output:
+
 ```markdown
 # Reminder | Bank Card Follow-up
+
 #remind-me
+
 - Call the bank about the card later.
 ```
 
+### Example 5
+
+Input:
+
+```markdown
+# Note | Food
+
+- Lunch for me: 185 grams salad and chicken.
+
+<hr>
+
+task ticktick>
+
+- reach out to luis, to see how hes doing.
+```
+
+Output:
+
+```markdown
+# Note | Food
+
+- Lunch for me: 185 grams salad and chicken.
+
+# Task | Luis | Check in with Luis
+
+- [ ] Reach out to Luis to see how he's doing. 📅 2026-03-22
+```
+
+The already formatted food section stays as-is. Only the rough task section is reformatted.
+
 ## Final check before returning
+
 - Every top-level section starts with `# `.
 - No document-level title was added.
 - Main headings use `Topic | Person | Heading` or `Topic | Heading`.
 - Tasks from `task>` or `todo>` are in Tasks plugin format with next-day due dates.
 - Reminders include `#remind-me` and are not converted to tasks unless clearly actionable task input.
-- Obvious related entities are WikiLinked, but links are not overused.
-- The transformed note fully replaces the original content.
+- WikiLinks are added only for notes that already exist and have been verified when possible.
+- Already formatted sections remain intact unless they clearly need correction.
+- The transformed note replaces only the portions that required formatting while preserving the rest of the note.
