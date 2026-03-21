@@ -1,0 +1,3 @@
+interface:
+  display_name: "Obsidian Daily Note Formatter"
+  short_description: "Clean rough daily notes into structured Obsidian markdown."
