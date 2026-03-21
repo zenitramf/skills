@@ -7,15 +7,11 @@ description: Search, create, and manage notes in the Obsidian vault with wikilin
 
 ## Vault location
 
-`/mnt/d/Obsidian Vault/AI Research/`
-
-Mostly flat at root level.
+Use Obsidian CLI for all Obsidian tasks
 
 ## Naming conventions
 
-- **Index notes**: aggregate related topics (e.g., `Ralph Wiggum Index.md`, `Skills Index.md`, `RAG Index.md`)
-- **Title case** for all note names
-- No folders for organization - use links and index notes instead
+- **kebab-case** for all note names
 
 ## Linking
 
@@ -25,21 +21,9 @@ Mostly flat at root level.
 
 ## Workflows
 
-### Search for notes
-
-```bash
-# Search by filename
-find "/mnt/d/Obsidian Vault/AI Research/" -name "*.md" | grep -i "keyword"
-
-# Search by content
-grep -rl "keyword" "/mnt/d/Obsidian Vault/AI Research/" --include="*.md"
-```
-
-Or use Grep/Glob tools directly on the vault path.
-
 ### Create a new note
 
-1. Use **Title Case** for filename
+1. Use **kebab-case** for filename
 2. Write content as a unit of learning (per vault rules)
 3. Add `[[wikilinks]]` to related notes at the bottom
 4. If part of a numbered sequence, use the hierarchical numbering scheme
@@ -47,13 +31,3 @@ Or use Grep/Glob tools directly on the vault path.
 ### Find related notes
 
 Search for `[[Note Title]]` across the vault to find backlinks:
-
-```bash
-grep -rl "\\[\\[Note Title\\]\\]" "/mnt/d/Obsidian Vault/AI Research/"
-```
-
-### Find index notes
-
-```bash
-find "/mnt/d/Obsidian Vault/AI Research/" -name "*Index*"
-```
